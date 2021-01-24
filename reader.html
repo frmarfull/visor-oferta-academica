@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./progressbar.css">
+    <title>Document</title>
+</head>
+<body>
+    <p id="text"></p>
+    <div id="progressbar" class="meter animate">
+        <span style="width: 100%"><span></span></span>
+    </div>
+    
+    <script>
+        let texto;
+        async function loadExcel(url) {
+            data = await fetch(url);
+            texto = await data.text()
+            readExcel(texto);
+            document.getElementById("progressbar").style.display = "None"
+        }
+        
+        function readExcel(data){
+            document.getElementById('text').innerHTML = data;
+            console.log(data);
+        }
+        
+        loadExcel('./test.txt');
+    </script>
+</body>
+</html>
