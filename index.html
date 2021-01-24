@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es-cl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XLSX TAV Duoc Alameda</title>
+</head>
+<body>
+    <h1>Open Dev Mode!</h1>
+    <p id="datos"></p>
+    <script src="xlsx.full.min.js"></script>
+    <script>
+        let datos;
+        let url = 'http://inscripciones.duoc.cl/IA/oferta/2021/SAN-BERNARDO-OA-1Semestre2021.xlsx';
+        //let url = 'alameda.xlsx'
+        fetch(url, {
+            mode: 'no-cors',
+            method: 'post',
+            headers: {
+                "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+                },
+            body: JSON.stringify({foo:bar})
+            }
+            ).then(res => { 
+            return res.arrayBuffer();
+        }).then(res => {
+			console.log("1")
+            //console.log('file:', res);
+            var arraybuffer = res;
+            /* convert data to binary string */
+            var data = new Uint8Array(arraybuffer);
+            var arr = new Array();
+            for(var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
+            var bstr = arr.join("");
+
+            /* Call XLSX */
+            var workbook = XLSX.read(bstr, {type:"binary"});
+
+            /* DO SOMETHING WITH workbook HERE */
+            var first_sheet_name = workbook.SheetNames[0];
+            /* Get worksheet */
+            var worksheet = workbook.Sheets[first_sheet_name];
+            //console.log(XLSX.utils.sheet_to_json(worksheet, {raw : true}));
+            datos = XLSX.utils.sheet_to_json(worksheet, {raw : true});
+
+            //if (typeof datos === 'undefined'){
+            if (datos.length == 0){
+                console.log("VACIO :(");
+                document.getElementById('datos').innerHTML = "NADA <br>"+url;
+            }
+            else {
+                console.log("HAY DATOS!")
+                document.getElementById('datos').innerHTML = "Hay Datos <br>"+url;
+            }
+
+        }).catch(function (error) {
+            console.log('Request failed', error);
+          });
+        console.log("2")
+    </script>
+</body>
+</html>
