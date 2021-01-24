@@ -8,7 +8,7 @@
 </head>
 <body>
     <img src="https://lh3.googleusercontent.com/proxy/KEi2naubXbQ6_JjHd8P3FBGeP60BM1W8fn6HjxrRluZkQ6jagzGfvbXhXnIVW0nIvolg7XTVahYAoe1glR-dt__mIBawMY7S" alt="Glasses logo">
-    <p>Open Dev Mode!</p>
+    <ul id="listado"></ul>
     <div id="progressbar" class="meter animate">
         <span></span>
     </div>
@@ -25,9 +25,12 @@
             var arr = new Array();
             for(var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
             var bstr = arr.join("");
+
             var workbook = XLSX.read(bstr, {type:"binary"});
+
             var first_sheet_name = workbook.SheetNames[0];
             var worksheet = workbook.Sheets[first_sheet_name];
+
             datos = XLSX.utils.sheet_to_json(worksheet, {raw : true});
             document.getElementById("progressbar").style.display = "None"
 
@@ -36,6 +39,14 @@
             }
             else {
                 document.getElementById('datos').innerHTML = "Hay Datos <br>"+url;
+                dato = Object.keys(datos[0]);
+                claves = Object.keys(dato).length;
+                for (var i = 0; i != claves; ++i) {
+                    var node = document.createElement("li");
+                    var textnode = document.createTextNode(dato[i]);
+                    node.appendChild(textnode);
+                    document.getElementById("listado").appendChild(node);
+                }
             }
         }).catch(function (error) {
             console.log('Request failed', error);
