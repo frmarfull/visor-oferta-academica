@@ -9,7 +9,7 @@
 <body>
     <h1>Oferta Académica 2021</h1>
     <h3>Sede Alameda</h3>
-    <img src="http://cdn.warer.com/media/All-My-Books-logo.png" alt="imagen académica">
+    <img src="./libros.png" alt="imagen libros">
     <div id="progressbar" class="meter animate">
         <span></span>
     </div>
@@ -17,16 +17,16 @@
         <form id="formBuscarAsignatura" style="display: none;">
             <label for="asignaturaBuscada">Nombre asignatura</label><br>
             <input type="text" id="asignaturaBuscada" name="asignatura"><br>
-            <input type="submit" value="Buscar">
+            <input type="submit" id="btnBuscar" value="Buscar">
+            <input type="button" id="btnLimpiar" value="Limpiar">
         </form>
-
         <table id="listado">
             <caption id="totalResultados"></caption>
             <tr>
                 <th id=title1></th>
             </tr>
-
         </table>
+        <article id="alternativas"></article>
     </section>
     <p id="datos"></p>
 
@@ -35,42 +35,58 @@
     <script>
         // Formulario de búsqueda.
         document.getElementById("formBuscarAsignatura").addEventListener("click", function(event){
-            event.preventDefault()
+            event.preventDefault();
+          });
+          
+        document.getElementById("btnBuscar").addEventListener("click", function(event){
+          buscar();
+        });
+
+        document.getElementById("btnLimpiar").addEventListener("click", function(event){
+            limpiar();
+          });
+
+          function buscar() {
+            // Transformar la entrada a mayúsculas.
             var asignaturaBuscada = document.getElementById("asignaturaBuscada").value.toUpperCase();
-            console.log("Buscando: " + asignaturaBuscada);
+            //console.log("Buscando: " + asignaturaBuscada);
             var resultadoBusqueda = buscarPorAsignatura(asignaturaBuscada);
             //console.log(resultadoBusqueda);
             
             listado = document.getElementById("listado").innerHTML = ""; // Limpiar la tabla.
 
-            if (resultadoBusqueda.length === undefined)
+            if (resultadoBusqueda.length === undefined) {
+                listado = document.getElementById("listado").innerHTML = '';
                 totalResultados = "";
-            else 
-                if (resultadoBusqueda.length != 0) {
-                    totalResultados = resultadoBusqueda.length;
-                    listado = document.getElementById("listado").innerHTML = '<caption id="totalResultados"> Resultados encontrados: ' + totalResultados + '</caption>';
-                    
-                    tabla = document.getElementById("listado")
+                }
+            else if (resultadoBusqueda.length == 0) {
+                listado = document.getElementById("listado").innerHTML = '<caption id="totalResultados"><strong>NO SE ENCONTRARON RESULTADOS</strong></caption>';
+            }
+            else if (resultadoBusqueda.length != 0) {
+                totalResultados = resultadoBusqueda.length;
+                listado = document.getElementById("listado").innerHTML = '<caption id="totalResultados"> Resultados encontrados: ' + totalResultados + '</caption>';
+                
+                tabla = document.getElementById("listado")
 
-                    //Títulos de la tabla.
+                //Títulos de la tabla.
+                var tr = document.createElement('tr');
+                for (var i in parametros) {
+                    tr.appendChild(document.createElement('th'));
+                    tr.cells[i].innerHTML = parametros[i];
+                }
+                tabla.appendChild(tr);
+
+                // Contenido de la tabla.
+                for (var i in resultadoBusqueda) {
                     var tr = document.createElement('tr');
-                    for (var i in parametros) {
-                        tr.appendChild(document.createElement('th'));
-                        tr.cells[i].innerHTML = parametros[i];
+                    for (var j in parametros) {
+                        tr.appendChild(document.createElement('td'));
+                        tr.cells[j].innerHTML = resultadoBusqueda[i][parametros[j]];
                     }
                     tabla.appendChild(tr);
-
-                    // Contenido de la tabla.
-                    for (var i in resultadoBusqueda) {
-                        var tr = document.createElement('tr');
-                        for (var j in parametros) {
-                            tr.appendChild(document.createElement('td'));
-                            tr.cells[j].innerHTML = resultadoBusqueda[i][parametros[j]];
-                        }
-                        tabla.appendChild(tr);
-                    }
                 }
-          });
+                }
+            }
     </script>
 
     <script>
@@ -78,6 +94,7 @@
         let datos;
         const asignaturasDisponibles = new Set();
         let parametros = new Set();
+        inputAsig = document.getElementById("asignaturaBuscada");
         //let url = 'http://inscripciones.duoc.cl/IA/oferta/2021/SAN-BERNARDO-OA-1Semestre2021.xlsx';
         let url = 'ALAMEDA.xlsx'
         fetch(url).then(res => { 
@@ -102,21 +119,61 @@
             else {
                 document.getElementById('formBuscarAsignatura').style.display = "Block"
                 for (var i = 0; i != datos.length; ++i) {
-                    asignaturasDisponibles.add(datos[i]["Asignatura"]);
+                    asignaturasDisponibles.add(latinize(datos[i]["Asignatura"]));
                 }
                 console.log(asignaturasDisponibles.size + " Asignaturas disponibles")
                 //document.getElementById('datos').innerHTML = "Hay Datos <br>"+url;
                 dato = Object.keys(datos[0]);
                 claves = Object.keys(dato).length;
-                for (var i = 0; i != claves; ++i) {
+                for (let i = 0; i != claves; ++i) {
                     parametros.add(dato[i]);
                 };
                 parametros = Array.from(parametros);
                 //console.log(parametros);
+                
+                // Los más buscados.
+                ramos = [];
+                for (var i in datos) ramos.push(datos[i]["Asignatura"]);
+                alternativas = {};
+                ramos.forEach(function(i) { alternativas[i] = (alternativas[i]||0) + 1;});
+                var entries = Object.entries(alternativas);
+                alternativas = entries.sort((a, b) => b[1] - a[1]);
+                
+                // Desplegar los 5 más buscados.
+                mostSearchedGUI = document.getElementById("alternativas");
+                captionMostSearched = document.createElement("strong");
+                captionMostSearched.innerHTML = "Lo más buscado";
+                mostSearched = document.createElement('ul');
+                mostSearched.appendChild(captionMostSearched);
+                for (let i = 0; i < 5; i++) {
+                    var element = mostSearched.appendChild(document.createElement('li'));
+                    element.innerHTML = alternativas[i][0];
+                    element.onclick = () => {
+                        inputAsig.value = alternativas[i][0]
+                        buscar();
+                        //this.console.log(alternativas[i][0])
+                    }
+                    //this.appendChild(element)
+                    //element.addEventListener("onclick",this.console.log('hola'));
+                }
+                mostSearchedGUI.appendChild(mostSearched);
+
             }
         }).catch(function (error) {
             console.log('Request failed', error);
           });
+    </script>
+
+    <script>
+        //Latinize (Eliminar tíldes).
+        function latinize(strWithAccents) {
+            return latinized = strWithAccents.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        };
+        function limpiar() {
+            //console.log("Limpiando...")
+            inputAsig.value = '';
+            document.getElementById("totalResultados").innerText = "";
+        };
     </script>
     
     <script>
@@ -127,7 +184,9 @@
             }
             var resultadoBusqueda = new Array;
             for (var i = 0; i != datos.length; ++i) {
-                if (datos[i]["Asignatura"].search(nombreAsignaturaBuscada) != -1) {
+                // Se eliminan los diacríticos de la búsqueda y los datos revisados.
+                // por tanto, ("inglés" == "ingles") retorna True.
+                if (latinize(datos[i]["Asignatura"]).search(latinize(nombreAsignaturaBuscada)) != -1) {
                     resultadoBusqueda.push(datos[i]);
                     //console.log("COINCIDENCIA ENCONTRADA\n"+datos[i]["Asignatura"]);
                 }
