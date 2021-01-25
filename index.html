@@ -7,15 +7,77 @@
     <title>XLSX TAV Duoc Alameda</title>
 </head>
 <body>
-    <img src="https://lh3.googleusercontent.com/proxy/KEi2naubXbQ6_JjHd8P3FBGeP60BM1W8fn6HjxrRluZkQ6jagzGfvbXhXnIVW0nIvolg7XTVahYAoe1glR-dt__mIBawMY7S" alt="Glasses logo">
-    <ul id="listado"></ul>
+    <h1>Oferta Académica 2021</h1>
+    <h3>Sede Alameda</h3>
+    <img src="http://cdn.warer.com/media/All-My-Books-logo.png" alt="imagen académica">
     <div id="progressbar" class="meter animate">
         <span></span>
     </div>
+    <section id="Buscador">
+        <form id="formBuscarAsignatura" style="display: none;">
+            <label for="asignaturaBuscada">Nombre asignatura</label><br>
+            <input type="text" id="asignaturaBuscada" name="asignatura"><br>
+            <input type="submit" value="Buscar">
+        </form>
+
+        <table id="listado">
+            <caption id="totalResultados"></caption>
+            <tr>
+                <th id=title1></th>
+            </tr>
+
+        </table>
+    </section>
     <p id="datos"></p>
+
     <script src="xlsx.full.min.js"></script>
+
     <script>
+        // Formulario de búsqueda.
+        document.getElementById("formBuscarAsignatura").addEventListener("click", function(event){
+            event.preventDefault()
+            var asignaturaBuscada = document.getElementById("asignaturaBuscada").value.toUpperCase();
+            console.log("Buscando: " + asignaturaBuscada);
+            var resultadoBusqueda = buscarPorAsignatura(asignaturaBuscada);
+            //console.log(resultadoBusqueda);
+            
+            listado = document.getElementById("listado").innerHTML = ""; // Limpiar la tabla.
+
+            if (resultadoBusqueda.length === undefined)
+                totalResultados = "";
+            else 
+                if (resultadoBusqueda.length != 0) {
+                    totalResultados = resultadoBusqueda.length;
+                    listado = document.getElementById("listado").innerHTML = '<caption id="totalResultados"> Resultados encontrados: ' + totalResultados + '</caption>';
+                    
+                    tabla = document.getElementById("listado")
+
+                    //Títulos de la tabla.
+                    var tr = document.createElement('tr');
+                    for (var i in parametros) {
+                        tr.appendChild(document.createElement('th'));
+                        tr.cells[i].innerHTML = parametros[i];
+                    }
+                    tabla.appendChild(tr);
+
+                    // Contenido de la tabla.
+                    for (var i in resultadoBusqueda) {
+                        var tr = document.createElement('tr');
+                        for (var j in parametros) {
+                            tr.appendChild(document.createElement('td'));
+                            tr.cells[j].innerHTML = resultadoBusqueda[i][parametros[j]];
+                        }
+                        tabla.appendChild(tr);
+                    }
+                }
+          });
+    </script>
+
+    <script>
+        // Lectura del documento XLSX.
         let datos;
+        const asignaturasDisponibles = new Set();
+        let parametros = new Set();
         //let url = 'http://inscripciones.duoc.cl/IA/oferta/2021/SAN-BERNARDO-OA-1Semestre2021.xlsx';
         let url = 'ALAMEDA.xlsx'
         fetch(url).then(res => { 
@@ -38,19 +100,40 @@
                 document.getElementById('datos').innerHTML = "NADA <br>"+url;
             }
             else {
-                document.getElementById('datos').innerHTML = "Hay Datos <br>"+url;
+                document.getElementById('formBuscarAsignatura').style.display = "Block"
+                for (var i = 0; i != datos.length; ++i) {
+                    asignaturasDisponibles.add(datos[i]["Asignatura"]);
+                }
+                console.log(asignaturasDisponibles.size + " Asignaturas disponibles")
+                //document.getElementById('datos').innerHTML = "Hay Datos <br>"+url;
                 dato = Object.keys(datos[0]);
                 claves = Object.keys(dato).length;
                 for (var i = 0; i != claves; ++i) {
-                    var node = document.createElement("li");
-                    var textnode = document.createTextNode(dato[i]);
-                    node.appendChild(textnode);
-                    document.getElementById("listado").appendChild(node);
-                }
+                    parametros.add(dato[i]);
+                };
+                parametros = Array.from(parametros);
+                //console.log(parametros);
             }
         }).catch(function (error) {
             console.log('Request failed', error);
           });
+    </script>
+    
+    <script>
+        // Búsqueda según criterio.
+        function buscarPorAsignatura(nombreAsignaturaBuscada) {
+            if (nombreAsignaturaBuscada.length < 3) {
+                return {}
+            }
+            var resultadoBusqueda = new Array;
+            for (var i = 0; i != datos.length; ++i) {
+                if (datos[i]["Asignatura"].search(nombreAsignaturaBuscada) != -1) {
+                    resultadoBusqueda.push(datos[i]);
+                    //console.log("COINCIDENCIA ENCONTRADA\n"+datos[i]["Asignatura"]);
+                }
+            }
+            return resultadoBusqueda;
+          }
     </script>
 </body>
 </html>
