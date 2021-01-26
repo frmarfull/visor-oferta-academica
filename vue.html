@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es-cl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./progressbar.css">
+  <title>XLSX TAV Duoc Alameda</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+  <script src="https://unpkg.com/vue@next"></script>
+</head>
+<body>
+<div id="app">
+  <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap shadow mb-2 py-3">
+    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">Oferta Académica 2021</a>
+    <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <!-- <form class="d-flex"> -->
+      <select class="form-control form-control-dark w-100" v-model="selected"  @change="buscarAsignatura()" >
+        <option v-for="item in listaAsignaturas" :value="item" :key="item">
+          {{ item }}
+        </option>
+      </select>
+      <!-- <button class="btn bg-white ml-2" type="button" @click="buscarAsignatura()">Buscar</button> -->
+    <!-- </form> -->
+  </header>
+  <div class="container">
+    <div class="row">
+      <table id="tblReportResultsDemographics" class="display" width="100%"></table>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="table-responsive">
+        <table class="table table-hover table-sm text-sm  table-bordered">
+          <thead>
+            <tr>
+              <th scope="col">Sede</th>
+              <th scope="col">Escuela</th>
+              <th scope="col">Carrera</th>
+              <th scope="col">Plan</th>
+              <th scope="col">Jornada</th>
+              <th scope="col">Nivel</th>
+              <th scope="col">Sigla</th>
+              <th scope="col">Asignatura</th>
+              <th scope="col">Sección</th>
+              <th scope="col">Sala</th>
+              <th scope="col">Docente</th>
+              <th scope="col">Día</th>
+              <th scope="col">Horario</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="lista in lista">
+              <th scope="row">{{ lista.Sede }}</th>
+              <td>{{ lista.Escuela }}</td>
+              <td>{{ lista.Carrera }}</td>
+              <td>{{ lista.Plan }}</td>
+              <td>{{ lista.Jornada }}</td>
+              <td>{{ lista.Nivel }}</td>
+              <td>{{ lista.Sigla }}</td>
+              <td>{{ lista.Asignatura }}</td>
+              <td>{{ lista.Sección }}</td>
+              <td>{{ lista.Sala }}</td>
+              <td>{{ lista.Docente }}</td>
+              <td>{{ lista.Día }}</td>
+              <td>{{ lista.Horario }}</td>
+              <td>{{ lista["Tipo Plan de Estudios"] }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.20/lodash.min.js"></script>
+<script src="xlsx.full.min.js"></script>
+<script>
+  // puedes usar funciones desde afuera
+  function holaMundo(){
+    console.log("Hola mundo");
+  }
+
+  let funA = () => {
+    console.log("Error");
+  };
+
+  let suma = (num1, num2) => num1 + num2;
+
+</script>
+
+<script>
+  const { createApp } = Vue;
+  const App = {
+    data() {
+      return {
+        listadoOficial: [],
+        lista:[],
+        listaAsignaturas:["Ingles","Matematica"],
+        url: "ALAMEDA.xlsx",
+        selected: ""
+      };
+    },
+    mounted() {
+      // Se carga la primera vez
+      this.buscarExcel();
+
+      // Puedo cargar cosas de afuera
+      holaMundo();
+      funA();
+      console.log(suma(1,2));
+
+      // si cargo cosas de vue tiene que ser con this
+    },
+    methods:{
+      buscarExcel(){
+        fetch(this.url).then(res => {
+          return res.arrayBuffer();
+        }).then(res => {
+          var data = new Uint8Array(res);
+          var arr = new Array();
+          for(var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
+          var bstr = arr.join("");
+          var workbook = XLSX.read(bstr, {type:"binary"});
+          var first_sheet_name = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[first_sheet_name];
+          this.listadoOficial = XLSX.utils.sheet_to_json(worksheet, {raw : true});
+
+          this.todasLasAsignaturas();
+        }).catch(function (error) {
+          console.log('Request failed', error);
+        });
+      },
+      todasLasAsignaturas(){
+        // uniqBy busca las aginaturas unicas
+        // mapValue solo deja nos nombres del value
+        this.listaAsignaturas = _.mapValues(_.uniqBy(this.listadoOficial,"Asignatura"),"Asignatura");
+      },
+      buscarAsignatura(){
+        // filtra por el nombre de la asignatura
+        this.lista = _.filter(this.listadoOficial,["Asignatura", this.selected]);
+
+        // PD con esto ya puedes hacer filtros por carreras
+        console.log("carreras", _.mapValues(_.uniqBy(this.listadoOficial,"Carrera"),"Carrera"));
+      }
+    },
+  };
+  createApp(App).mount("#app");
+</script>
+</body>
+</html>
